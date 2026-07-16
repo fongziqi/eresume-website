@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Unredacted source screenshots — contain a student ID and a live wallet tx hash.
+# Never publish these; only the redacted copies in public/projects/ are safe.
+screenshot-originals/
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*

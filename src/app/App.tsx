@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence, useInView, useMotionValue, useSpring } from "motion/react";
 import { Github, Linkedin, Mail, MessageCircle, ExternalLink, ChevronRight, ArrowUp, Terminal, Code2, Database, Globe, Menu, X } from "lucide-react";
+import { useIsMobile } from "./components/ui/use-mobile";
 
 const NAV_LINKS = ["about", "skills", "projects", "leadership", "contact"];
 
@@ -144,7 +145,7 @@ const VIBE_PROJECTS: Project[] = [
     github: null,
     live: null,
     highlight: false,
-    images: ["/projects/cad-manager.png"],
+    images: ["/projects/cad-manager.jpg"],
     why:
       "It was built to solve a real operational problem for a small CAD manufacturing team: keeping project files, approvals, statuses, and designer workspaces organized in one place instead of managing everything manually across folders and chat. The main goal was to create a management layer on top of SharePoint so the team could track who is editing what, control file access by workflow state, record audit history, and reduce mistakes during review, approval, archive, and restore steps.",
     learned: [
@@ -161,7 +162,7 @@ const VIBE_PROJECTS: Project[] = [
     live: null,
     highlight: false,
     // Student ID redacted from this capture; untouched original in /screenshot-originals.
-    images: ["/projects/timetable-bidder.png"],
+    images: ["/projects/timetable-bidder.jpg"],
     why:
       "Course bidding at UTAR is a scramble: the window opens, everyone rushes, and a clash you didn't spot costs you a semester. I wanted the planning done before the window opened, so bidding became execution rather than guesswork.",
     learned: [
@@ -290,6 +291,21 @@ function Particles() {
       ))}
     </div>
   );
+}
+
+function usePrefersReducedMotion() {
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(mediaQuery.matches);
+
+    update();
+    mediaQuery.addEventListener("change", update);
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
+
+  return reducedMotion;
 }
 
 /** Slow-drifting ambient glow orbs */
@@ -543,15 +559,25 @@ function BackToTop() {
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+  const isMobile = useIsMobile();
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   const scrollTo = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setMenuOpen(false); };
+  const showDecorations = hasMounted && !prefersReducedMotion;
+  const showHeavyDecorations = showDecorations && !isMobile;
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden tracking-wide" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
       {/* Ambient layers */}
-      <Scanlines />
-      <CursorGlow />
-      <AmbientOrbs />
-      <Particles />
+      {showDecorations && <Scanlines />}
+      {showHeavyDecorations && <CursorGlow />}
+      {showHeavyDecorations && <AmbientOrbs />}
+      {showHeavyDecorations && <Particles />}
       <BackToTop />
 
       {/* Nav */}

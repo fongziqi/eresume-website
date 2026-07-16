@@ -284,6 +284,21 @@
   }
   .cyber-glitch::before { clip-path: inset(40% 0 40%); }
   .cyber-glitch::after { clip-path: inset(60% 0 20%); }
+
+  .cyber-scanlines {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .cyber-scanlines {
+    display: none;
+  }
+
+  .cyber-glitch::before,
+  .cyber-glitch::after {
+    animation: none;
+  }
 }
 
 /* Inline word highlights — neon color + glow for contrast against muted body text */

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence, useInView, useMotionValue, useSpring } from "motion/react";
-import { Github, Linkedin, Mail, Phone, ExternalLink, ChevronRight, ArrowUp, Terminal, Code2, Database, Globe, Menu, X } from "lucide-react";
+import { Github, Linkedin, Mail, MessageCircle, ExternalLink, ChevronRight, ArrowUp, Terminal, Code2, Database, Globe, Menu, X } from "lucide-react";
 
 const NAV_LINKS = ["about", "skills", "projects", "leadership", "contact"];
 
@@ -1005,24 +1005,7 @@ export default function App() {
               <CornerBracket className="top-0 left-0" />
               <CornerBracket className="bottom-0 right-0 rotate-180" />
               <p className="text-xs font-mono text-muted-foreground" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{"// find me at"}</p>
-              {[
-                { icon: Github, label: "github.com/fongziqi", href: "https://github.com/fongziqi" },
-                { icon: Linkedin, label: "linkedin.com/in/fongziqi", href: "https://www.linkedin.com/in/fongziqi/" },
-                { icon: Mail, label: "fongziqi123@gmail.com", href: "mailto:fongziqi123@gmail.com" },
-                { icon: Phone, label: "+6010-203 0186", href: "tel:+60102030186" },
-              ].map(({ icon: Icon, label, href }) => (
-                <motion.a
-                  key={label}
-                  href={href}
-                  target={href.startsWith("http") ? "_blank" : undefined}
-                  rel="noreferrer"
-                  whileHover={{ x: 6, color: "#00ff88" }}
-                  className="flex items-center gap-3 text-sm text-muted-foreground transition-colors"
-                >
-                  <Icon size={16} />
-                  <span className="font-mono" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</span>
-                </motion.a>
-              ))}
+              <ContactLinks />
             </motion.div>
           </RevealSection>
         </div>
@@ -1051,6 +1034,127 @@ export default function App() {
 }
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+interface ContactLink {
+  icon: typeof Github;
+  label: string;
+  href: string;
+  /** Show a "leaving the site" confirmation before opening (e.g. WhatsApp). */
+  confirm?: boolean;
+}
+
+const CONTACT_LINKS: ContactLink[] = [
+  { icon: Github, label: "github.com/fongziqi", href: "https://github.com/fongziqi" },
+  { icon: Linkedin, label: "linkedin.com/in/fongziqi", href: "https://www.linkedin.com/in/fongziqi/" },
+  { icon: Mail, label: "fongziqi123@gmail.com", href: "mailto:fongziqi123@gmail.com" },
+  { icon: MessageCircle, label: "+6010-203 0186", href: "https://wa.me/60102030186", confirm: true },
+];
+
+/** Contact links; WhatsApp asks for confirmation before leaving the site. */
+function ContactLinks() {
+  const [pending, setPending] = useState<ContactLink | null>(null);
+
+  return (
+    <>
+      {CONTACT_LINKS.map(({ icon: Icon, label, href, confirm }) => (
+        <motion.a
+          key={label}
+          href={href}
+          target={href.startsWith("http") ? "_blank" : undefined}
+          rel="noreferrer"
+          onClick={confirm ? (e) => { e.preventDefault(); setPending(CONTACT_LINKS.find((l) => l.label === label) ?? null); } : undefined}
+          whileHover={{ x: 6, color: "#00ff88" }}
+          className="flex items-center gap-3 text-sm text-muted-foreground transition-colors"
+        >
+          <Icon size={16} />
+          <span className="font-mono" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{label}</span>
+        </motion.a>
+      ))}
+
+      <ConfirmDialog
+        pending={pending}
+        onClose={() => setPending(null)}
+        onConfirm={() => {
+          if (pending) window.open(pending.href, "_blank", "noopener,noreferrer");
+          setPending(null);
+        }}
+      />
+    </>
+  );
+}
+
+/** Terminal-style "you're about to leave" confirmation. Radix handles focus trap, Esc, scroll lock. */
+function ConfirmDialog({ pending, onClose, onConfirm }: { pending: ContactLink | null; onClose: () => void; onConfirm: () => void }) {
+  return (
+    <Dialog.Root open={!!pending} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <AnimatePresence>
+        {pending && (
+          <Dialog.Portal forceMount>
+            <Dialog.Overlay asChild forceMount>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="fixed inset-0 z-[10000] bg-black/85 backdrop-blur-sm"
+              />
+            </Dialog.Overlay>
+
+            <Dialog.Content asChild forceMount aria-describedby={undefined}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                style={{ x: "-50%", y: "-50%", boxShadow: "var(--box-shadow-neon-sm)" }}
+                className="cyber-chamfer fixed left-1/2 top-1/2 z-[10001] w-[calc(100vw-2rem)] max-w-md border border-primary/40 bg-background focus:outline-none"
+              >
+                <div className="flex items-center gap-2 px-5 py-2.5 border-b border-border bg-card">
+                  <span className="w-2.5 h-2.5 rounded-full bg-destructive/80" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-primary/80" />
+                  <p className="ml-2 text-xs text-primary font-mono" style={{ fontFamily: "'JetBrains Mono', monospace" }}>~/open-whatsapp</p>
+                </div>
+
+                <div className="p-6 space-y-5">
+                  <Dialog.Title asChild>
+                    <h2 className="text-base font-mono font-semibold uppercase tracking-wide text-foreground flex items-center gap-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                      <MessageCircle size={18} className="text-primary" /> Open WhatsApp?
+                    </h2>
+                  </Dialog.Title>
+                  <p className="font-tech text-sm text-muted-foreground leading-relaxed">
+                    This opens a WhatsApp chat with Fong Zi Qi (<span className="neon-highlight">{pending.label}</span>) in a new tab. Continue?
+                  </p>
+
+                  <div className="flex items-center justify-end gap-3 pt-1">
+                    <Dialog.Close asChild>
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="cyber-chamfer-sm px-4 py-2 border border-border text-muted-foreground text-xs font-mono uppercase tracking-wider hover:text-foreground transition-colors duration-150"
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        Cancel
+                      </motion.button>
+                    </Dialog.Close>
+                    <motion.button
+                      onClick={onConfirm}
+                      whileHover={{ scale: 1.04, filter: "brightness(1.1) drop-shadow(0 0 12px rgba(0,255,136,0.5))" }}
+                      whileTap={{ scale: 0.97 }}
+                      className="cyber-chamfer-sm flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-xs font-mono font-medium uppercase tracking-wider transition-all duration-150"
+                    >
+                      Open WhatsApp <ExternalLink size={13} />
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        )}
+      </AnimatePresence>
+    </Dialog.Root>
+  );
+}
 
 /** Terminal-panel detail view for a single project. Radix handles focus trap, Escape and scroll lock. */
 function ProjectModal({

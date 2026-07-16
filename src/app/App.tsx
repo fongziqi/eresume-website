@@ -820,7 +820,7 @@ export default function App() {
               {[
                 ["university", "UTAR"],
                 ["degree", "B. Software Engineering (Hons)"],
-                ["year", "Class of 2027"],
+                ["year", "Year 3 Semester 1"],
                 ["cgpa", "3.48 / 4.00"],
                 ["location", "Selangor, Malaysia"],
                 ["status", "open to internships"],

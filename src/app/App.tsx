@@ -80,6 +80,17 @@ interface Project {
   images?: string[];
 }
 
+const preloadedImageSources = new Set<string>();
+
+function preloadImages(sources?: string[]) {
+  sources?.forEach((source) => {
+    if (preloadedImageSources.has(source)) return;
+    const image = new Image();
+    image.src = source;
+    preloadedImageSources.add(source);
+  });
+}
+
 const ACADEMIC_PROJECTS: Project[] = [
   {
     title: "Automated Onboarding Management System",
@@ -1392,6 +1403,9 @@ function ProjectGrid({ projects }: { projects: Project[] }) {
             tabIndex={0}
             aria-haspopup="dialog"
             aria-label={`${project.title} — view details`}
+            onMouseEnter={() => preloadImages(project.images)}
+            onFocus={() => preloadImages(project.images)}
+            onTouchStart={() => preloadImages(project.images)}
             onClick={(e) => open(project, e.currentTarget as HTMLElement)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
